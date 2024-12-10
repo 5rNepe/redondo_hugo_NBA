@@ -63,7 +63,6 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     public static void crearGrafico(JComboBox jugadorSeleccionado, JComboBox archivoEquipo) {
         String nombreJugador = (String) jugadorSeleccionado.getSelectedItem();
         String nombreEquipo = (String) archivoEquipo.getSelectedItem();
-        System.out.println(nombreEquipo);
         File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx");
         String PATH_GRAFICOS = "C:\\Users\\GS2\\Desktop\\Graficos";
 
