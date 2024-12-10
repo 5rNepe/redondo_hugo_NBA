@@ -10,6 +10,12 @@ import java.io.IOException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.swing.*;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.ChartUtils;
+import org.jfree.chart.ChartPanel;
 
 /**
  *
@@ -45,6 +51,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         String[] chicago = {"Lonzo Ball", "Zach LaVine", "Torrey Craig", "Adama Sanogo", "Nikola Vucevic"};
         ElegirEquipo.addActionListener(e -> actualizarjugadores(ElegirEquipo, ElegirJugador, boston, chicago));
         
+        
         int Tiross2 = (int) Tiros2.getValue();
 
         Calcular.addActionListener(e -> {
@@ -52,8 +59,11 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         });
     }
     
+    
+
+    
     public static void actualizarjugadores(JComboBox Elegiquipo, JComboBox Elegijuga, String[] boston, String[] chicago){
-    String equipoSeleccionado = (String) Elegiquipo.getSelectedItem();
+        String equipoSeleccionado = (String) Elegiquipo.getSelectedItem();
 
         Elegijuga.removeAllItems();
 
@@ -101,23 +111,9 @@ public class BaloncestoNBA extends javax.swing.JFrame {
                 headerRow.createCell(10).setCellValue("Valoración");
             }
 
-            int filaJugador = -1;
-            for (int i = 1; i < hoja.getPhysicalNumberOfRows(); i++) {
-                Row row = hoja.getRow(i);
-                if (row != null && row.getCell(0) != null) { 
-                    filaJugador = i;
-                    break;
-                }
-            }
+            int filaJugador = hoja.getPhysicalNumberOfRows();
+            Row dataRow = hoja.createRow(filaJugador);
 
-            if (filaJugador == -1) {
-                filaJugador = hoja.getPhysicalNumberOfRows();
-                Row nuevaFila = hoja.createRow(filaJugador);
-                
-            }
-
-            Row dataRow = hoja.getRow(filaJugador);
-            
             dataRow.createCell(0).setCellValue(tiros2);
             dataRow.createCell(1).setCellValue(tiros2Realizados);
             dataRow.createCell(2).setCellValue(tiros3);
@@ -152,31 +148,69 @@ public class BaloncestoNBA extends javax.swing.JFrame {
                 encabezado.createCell(4).setCellValue("Promedio Puntos");
             }
 
-            int filaMedia = -1;
-            for (int i = 1; i <= hojaDeMedias.getPhysicalNumberOfRows(); i++) {
-                Row row = hojaDeMedias.getRow(i);
-                if (row != null && row.getCell(0).getStringCellValue().equals(nombreJugador)) {
-                    filaMedia = i;
-                    break;
+            double totalTiros2Jugador = 0, totalTiros2RealizadosJugador = 0;
+            double totalTiros3Jugador = 0, totalTiros3RealizadosJugador = 0;
+            double totalTirosLibresJugador = 0, totalTirosLibresRealizadosJugador = 0;
+            double totalPuntosJugador = 0;
+            int partidosJugados = 0;
+
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+            if (hojaJugador != null) {
+                for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                    Row row = hojaJugador.getRow(i);
+                    if (row != null) {
+                        double tiros2Jugador = row.getCell(0).getNumericCellValue();
+                        double tiros2RealizadosJugador = row.getCell(1).getNumericCellValue();
+                        double tiros3Jugador = row.getCell(2).getNumericCellValue();
+                        double tiros3RealizadosJugador = row.getCell(3).getNumericCellValue();
+                        double tirosLibresJugador = row.getCell(4).getNumericCellValue();
+                        double tirosLibresRealizadosJugador = row.getCell(5).getNumericCellValue();
+
+                        totalTiros2Jugador += tiros2Jugador;
+                        totalTiros2RealizadosJugador += tiros2RealizadosJugador;
+                        totalTiros3Jugador += tiros3Jugador;
+                        totalTiros3RealizadosJugador += tiros3RealizadosJugador;
+                        totalTirosLibresJugador += tirosLibresJugador;
+                        totalTirosLibresRealizadosJugador += tirosLibresRealizadosJugador;
+
+                        totalPuntosJugador += (2 * tiros2Jugador + 3 * tiros3Jugador + tirosLibresJugador);
+
+                        partidosJugados++;
+                    }
                 }
             }
 
-            if (filaMedia == -1) {
-                filaMedia = hojaDeMedias.getPhysicalNumberOfRows();
-                Row filaNueva = hojaDeMedias.createRow(filaMedia);
-                filaNueva.createCell(0).setCellValue(nombreJugador);
-            } else {
-                Row filaExistente = hojaDeMedias.getRow(filaMedia);
-                filaExistente.createCell(0).setCellValue(nombreJugador);
+            if (partidosJugados > 0) {
+                double promedioTiros2Jugador = totalTiros2Jugador / partidosJugados;
+                double promedioTiros3Jugador = totalTiros3Jugador / partidosJugados;
+                double promedioTirosLibresJugador = totalTirosLibresJugador / partidosJugados;
+                double promedioPuntosJugador = totalPuntosJugador / partidosJugados;
+
+                int filaMedia = -1;
+                for (int i = 1; i <= hojaDeMedias.getPhysicalNumberOfRows(); i++) {
+                    Row row = hojaDeMedias.getRow(i);
+                    if (row != null && row.getCell(0).getStringCellValue().equals(nombreJugador)) {
+                        filaMedia = i;
+                        break;
+                    }
+                }
+
+                if (filaMedia == -1) {
+                    filaMedia = hojaDeMedias.getPhysicalNumberOfRows();
+                    Row filaNueva = hojaDeMedias.createRow(filaMedia);
+                    filaNueva.createCell(0).setCellValue(nombreJugador);
+                }
+
+                Row filaMediaExistente = hojaDeMedias.getRow(filaMedia);
+                filaMediaExistente.createCell(1).setCellValue(promedioTiros2Jugador);
+                filaMediaExistente.createCell(2).setCellValue(promedioTiros3Jugador);
+                filaMediaExistente.createCell(3).setCellValue(promedioTirosLibresJugador);
+                filaMediaExistente.createCell(4).setCellValue(promedioPuntosJugador);
             }
 
-            Row filaMedi = hojaDeMedias.getRow(filaMedia);
-            filaMedi.createCell(1).setCellValue(tiros2 / (double) tiros2Realizados);
-            filaMedi.createCell(2).setCellValue(tiros3 / (double) tiros3Realizados);
-            filaMedi.createCell(3).setCellValue(tirosLibres / (double) tirosLibresRealizados);
-            filaMedi.createCell(4).setCellValue((2 * tiros2 + 3 * tiros3 + tirosLibres) / 2.0);
-            
             libro.setSheetOrder("Medias", libro.getNumberOfSheets() - 1);
+
+
 
             for (int i = 0; i < 12; i++) {
                 hoja.autoSizeColumn(i);
