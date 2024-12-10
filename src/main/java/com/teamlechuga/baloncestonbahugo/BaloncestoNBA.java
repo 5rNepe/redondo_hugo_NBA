@@ -50,6 +50,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         String[] boston = {"Jrue Holiday", "Derrick White", "Payton Pritchard", "JD Davison", "Baylor Scheierman"};
         String[] chicago = {"Lonzo Ball", "Zach LaVine", "Torrey Craig", "Adama Sanogo", "Nikola Vucevic"};
         ElegirEquipo.addActionListener(e -> actualizarjugadores(ElegirEquipo, ElegirJugador, boston, chicago));
+        Grafica.addActionListener(e -> crearGrafico(ElegirJugador, ElegirEquipo));
         
         
         int Tiross2 = (int) Tiros2.getValue();
@@ -59,7 +60,72 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         });
     }
     
-    
+    public static void crearGrafico(JComboBox jugadorSeleccionado, JComboBox archivoEquipo) {
+        String nombreJugador = (String) jugadorSeleccionado.getSelectedItem();
+        String nombreEquipo = (String) archivoEquipo.getSelectedItem();
+        System.out.println(nombreEquipo);
+        File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx");
+        String PATH_GRAFICOS = "C:\\Users\\GS2\\Desktop\\Graficos";
+
+        if (nombreJugador == null || nombreJugador.isEmpty() || nombreJugador == " ") {
+            JOptionPane.showMessageDialog(null, "Seleccione un jugador para generar el gráfico.");
+            return;
+        }
+
+        try {
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            Workbook libro = new XSSFWorkbook(archivoExcel);
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+
+            if (hojaJugador == null) {
+                JOptionPane.showMessageDialog(null, "No hay datos para el jugador seleccionado.");
+                libro.close();
+                return;
+            }
+
+            for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaJugador.getRow(i);
+                if (row != null) {
+                    double puntos = (2 * row.getCell(0).getNumericCellValue())
+                            + (3 * row.getCell(2).getNumericCellValue())
+                            + row.getCell(4).getNumericCellValue();
+                    dataset.addValue(puntos, "Puntos", "Partido " + i);
+                }
+            }
+            libro.close();
+
+            JFreeChart chart = ChartFactory.createBarChart(
+                    "Puntos de " + nombreJugador,
+                    "Partidos",
+                    "Puntos",
+                    dataset
+            );
+
+            CategoryPlot plot = chart.getCategoryPlot();
+            plot.setRangeGridlinePaint(java.awt.Color.BLACK);
+
+            File directorio = new File(PATH_GRAFICOS);
+            if (!directorio.exists()) {
+                directorio.mkdirs();
+            }
+
+            String rutaJugador = PATH_GRAFICOS + File.separator + nombreJugador + ".png";
+            ChartUtils.saveChartAsPNG(new File(rutaJugador), chart, 800, 600);
+
+            JOptionPane.showMessageDialog(null, "Gráfico generado en: " + rutaJugador);
+
+            JFrame frameGrafico = new JFrame("Gráfico de " + nombreJugador);
+            frameGrafico.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frameGrafico.setSize(800, 600);
+
+            ChartPanel chartPanel = new ChartPanel(chart);
+            frameGrafico.add(chartPanel);
+            frameGrafico.setVisible(true);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Error al generar gráfico: " + ex.getMessage());
+        }
+    }
 
     
     public static void actualizarjugadores(JComboBox Elegiquipo, JComboBox Elegijuga, String[] boston, String[] chicago){
@@ -312,6 +378,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         FaltasRecibidas = new javax.swing.JSpinner();
         FaltasRealizadas = new javax.swing.JSpinner();
         Calcular = new javax.swing.JButton();
+        Grafica = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -558,6 +625,12 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints.gridy = 9;
         Datos2.add(Calcular, gridBagConstraints);
 
+        Grafica.setText("Crear Gráfica");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 9;
+        Datos2.add(Grafica, gridBagConstraints);
+
         Paneles.addTab("Datos", Datos2);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -623,6 +696,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     private javax.swing.JLabel FaltasRealizadasTexto;
     private javax.swing.JSpinner FaltasRecibidas;
     private javax.swing.JLabel FaltasRecibidasTexto;
+    private javax.swing.JButton Grafica;
     private javax.swing.JLabel Jugador;
     private javax.swing.JTabbedPane Paneles;
     private javax.swing.JSpinner Perdidas;
