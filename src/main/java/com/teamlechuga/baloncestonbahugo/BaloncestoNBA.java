@@ -39,112 +39,150 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         TirosLibresRealizados.addChangeListener(e -> {
             TirosTotales.setValue((int) Tiros2Realizados.getValue() + (int) Tiros3Realizados.getValue() + (int) TirosLibresRealizados.getValue());
         });
+        ElegirEquipo.addItem("Boston Celtics");
+        ElegirEquipo.addItem("Chicago Bulls");
+        String[] boston = {"Jrue Holiday", "Derrick White", "Payton Pritchard", "JD Davison", "Baylor Scheierman"};
+        String[] chicago = {"Lonzo Ball", "Zach LaVine", "Torrey Craig", "Adama Sanogo", "Nikola Vucevic"};
+        ElegirEquipo.addActionListener(e -> actualizarjugadores(ElegirEquipo, ElegirJugador, boston, chicago));
         
         int Tiross2 = (int) Tiros2.getValue();
 
         Calcular.addActionListener(e -> {
-            calcularYExportar(NombreJugador, Tiros2, Tiros2Realizados, Tiros3, Tiros3Realizados, TirosLibres, TirosLibresRealizados, TirosTotales, Rebotes, Asistencias, Robos, Tapones, TaponesRecibidos, Perdidas, FaltasRecibidas, FaltasRealizadas);
+            calcularYExportar(ElegirEquipo, ElegirJugador, Tiros2, Tiros2Realizados, Tiros3, Tiros3Realizados, TirosLibres, TirosLibresRealizados, TirosTotales, Rebotes, Asistencias, Robos, Tapones, TaponesRecibidos, Perdidas, FaltasRecibidas, FaltasRealizadas);
         });
     }
     
-    public static void escribirEnExcel(String nombreJugador, int tiros2, int tiros2Realizados, int tiros3, int tiros3Realizados, int tirosLibres, int tirosLibresRealizados, int tirosTotales, int rebotes, int asistencias, int robos, int tapones, int taponesRecibidos, int perdidas, int faltasRecibidas, int faltasRealizadas) {
-        File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\EstadisticasBaloncesto.xlsx");
+    public static void actualizarjugadores(JComboBox Elegiquipo, JComboBox Elegijuga, String[] boston, String[] chicago){
+    String equipoSeleccionado = (String) Elegiquipo.getSelectedItem();
+
+        Elegijuga.removeAllItems();
+
+        if (equipoSeleccionado.equals("Boston Celtics")) {
+            for (String jugador : boston) {
+                Elegijuga.addItem(jugador);
+            }
+        } else if (equipoSeleccionado.equals("Chicago Bulls")) {
+            for (String jugador : chicago) {
+                Elegijuga.addItem(jugador);
+            }
+        }}
+    
+    public static void escribirEnExcel(String equipo, String nombreJugador, int tiros2, int tiros2Realizados, int tiros3, int tiros3Realizados, int tirosLibres, int tirosLibresRealizados, int tirosTotales, int rebotes, int asistencias, int robos, int tapones, int taponesRecibidos, int perdidas, int faltasRecibidas, int faltasRealizadas) {
+        File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\" + equipo + " Estadisticas Baloncesto.xlsx");
         Workbook libro = null;
-        Sheet hoja;
+        Sheet hoja = null;
 
         try {
             if (archivoExcel.exists()) {
                 FileInputStream fis = new FileInputStream(archivoExcel);
                 libro = new XSSFWorkbook(fis);
-                hoja = libro.getSheetAt(0);
+                hoja = libro.getSheet(nombreJugador);
+                if (hoja == null) {
+                    hoja = libro.createSheet(nombreJugador);
+                }
                 fis.close();
             } else {
                 libro = new XSSFWorkbook();
-                hoja = libro.createSheet("Estadísticas de Jugadores");
+                hoja = libro.createSheet(nombreJugador);
+            }
 
+            if (hoja.getPhysicalNumberOfRows() == 0) {
                 Row headerRow = hoja.createRow(0);
-                headerRow.createCell(0).setCellValue("Nombre del Jugador");
-                headerRow.createCell(1).setCellValue("Tiros de 2 Metidos");
-                headerRow.createCell(2).setCellValue("Tiros de 2 Realizados");
-                headerRow.createCell(3).setCellValue("Tiros de 3 Metidos");
-                headerRow.createCell(4).setCellValue("Tiros de 3 Realizados");
-                headerRow.createCell(5).setCellValue("Tiros Libres Metidos");
-                headerRow.createCell(6).setCellValue("Tiros Libres Realizados");
-                headerRow.createCell(7).setCellValue("Tiros Totales");
-                headerRow.createCell(8).setCellValue("FG% (Porcentaje de tiros anotados)");
-                headerRow.createCell(9).setCellValue("eFG% (Porcentaje efectivo)");
-                headerRow.createCell(10).setCellValue("TS% (Tiro Real)");
-                headerRow.createCell(11).setCellValue("Valoración");
+                headerRow.createCell(0).setCellValue("Tiros de 2 Metidos");
+                headerRow.createCell(1).setCellValue("Tiros de 2 Realizados");
+                headerRow.createCell(2).setCellValue("Tiros de 3 Metidos");
+                headerRow.createCell(3).setCellValue("Tiros de 3 Realizados");
+                headerRow.createCell(4).setCellValue("Tiros Libres Metidos");
+                headerRow.createCell(5).setCellValue("Tiros Libres Realizados");
+                headerRow.createCell(6).setCellValue("Tiros Totales");
+                headerRow.createCell(7).setCellValue("FG% (Porcentaje de tiros anotados)");
+                headerRow.createCell(8).setCellValue("eFG% (Porcentaje efectivo)");
+                headerRow.createCell(9).setCellValue("TS% (Tiro Real)");
+                headerRow.createCell(10).setCellValue("Valoración");
             }
+
+            int filaJugador = -1;
+            for (int i = 1; i < hoja.getPhysicalNumberOfRows(); i++) {
+                Row row = hoja.getRow(i);
+                if (row != null && row.getCell(0) != null) { 
+                    filaJugador = i;
+                    break;
+                }
+            }
+
+            if (filaJugador == -1) {
+                filaJugador = hoja.getPhysicalNumberOfRows();
+                Row nuevaFila = hoja.createRow(filaJugador);
+                
+            }
+
+            Row dataRow = hoja.getRow(filaJugador);
             
-            int ultimaFila = hoja.getLastRowNum();
-            boolean hayFilaDeMedias = hoja.getRow(ultimaFila).getCell(0).getStringCellValue().equals("Medias");
-
-            if (hayFilaDeMedias) {
-                hoja.removeRow(hoja.getRow(ultimaFila));
-            }
-
-            int siguiente = hoja.getLastRowNum() + 1;
-            Row dataRow = hoja.createRow(siguiente);
-
-            dataRow.createCell(0).setCellValue(nombreJugador);
-            dataRow.createCell(1).setCellValue(tiros2);
-            dataRow.createCell(2).setCellValue(tiros2Realizados);
-            dataRow.createCell(3).setCellValue(tiros3);
-            dataRow.createCell(4).setCellValue(tiros3Realizados);
-            dataRow.createCell(5).setCellValue(tirosLibres);
-            dataRow.createCell(6).setCellValue(tirosLibresRealizados);
-            dataRow.createCell(7).setCellValue(tirosTotales);
+            dataRow.createCell(0).setCellValue(tiros2);
+            dataRow.createCell(1).setCellValue(tiros2Realizados);
+            dataRow.createCell(2).setCellValue(tiros3);
+            dataRow.createCell(3).setCellValue(tiros3Realizados);
+            dataRow.createCell(4).setCellValue(tirosLibres);
+            dataRow.createCell(5).setCellValue(tirosLibresRealizados);
+            dataRow.createCell(6).setCellValue(tirosTotales);
 
             Integer fga = tiros2Realizados + tiros3Realizados;
             double fg = (tirosTotales > 0) ? ((double) (tiros2 + tiros3) / fga) * 100 : 0;
-            dataRow.createCell(8).setCellValue(String.format("%.2f%%", fg));
+            dataRow.createCell(7).setCellValue(String.format("%.2f%%", fg));
 
-            double efg = (tirosTotales > 0) ? ((tiros2 + (0.5 * tiros3)) / fga) * 100: 0;
-            dataRow.createCell(9).setCellValue(String.format("%.2f%%", efg));
-            
+            double efg = (tirosTotales > 0) ? ((tiros2 + (0.5 * tiros3)) / fga) * 100 : 0;
+            dataRow.createCell(8).setCellValue(String.format("%.2f%%", efg));
+
             Integer puntos = (2 * tiros2) + (3 * tiros3) + (tirosLibres);
-            
             double ts = (tirosTotales > 0) ? (puntos / (2 * (fga + (0.44 * tirosLibresRealizados)))) * 100 : 0;
-            dataRow.createCell(10).setCellValue(String.format("%.2f%%", ts));
-            
+            dataRow.createCell(9).setCellValue(String.format("%.2f%%", ts));
+
             Integer tirosFallados = (tiros3Realizados - tiros3) + (tiros2Realizados - tiros2) + (tirosLibresRealizados - tirosLibres);
             Integer valoracion = (puntos + rebotes + asistencias + robos + tapones + faltasRecibidas) - (tirosFallados + perdidas + taponesRecibidos + faltasRealizadas);
-            dataRow.createCell(11).setCellValue(valoracion);
-            
-            int filasDatos = hoja.getLastRowNum();
-            Row filaMedias = hoja.createRow(filasDatos + 1);
-            filaMedias.createCell(0).setCellValue("Medias");
+            dataRow.createCell(10).setCellValue(valoracion);
 
-            for (int col = 1; col <= 11; col++) {
-                double suma = 0;
-                int totalFilas = 0;
-                for (int fila = 1; fila <= filasDatos; fila++) {
-                    Row row = hoja.getRow(fila);
-                    if (row != null && row.getCell(col) != null) {
-                        Cell cell = row.getCell(col);
-                        if (cell.getCellType() == CellType.NUMERIC) {
-                            suma += cell.getNumericCellValue();
-                            totalFilas++;
-                        } else if (cell.getCellType() == CellType.STRING) {
-                            String valor = cell.getStringCellValue().replace("%", "").replace(",", ".").trim();
-                            if (!valor.isEmpty()) {
-                                suma += Double.parseDouble(valor);
-                                totalFilas++;
-                            }
-                        }
-                    }
-                }
-                double media = totalFilas > 0 ? suma / totalFilas : 0;
-                if (col >= 8 && col <= 10) {
-                    filaMedias.createCell(col).setCellValue(String.format("%.2f%%", media));
-                } else {
-                    filaMedias.createCell(col).setCellValue(media);
+            Sheet hojaDeMedias = libro.getSheet("Medias");
+            if (hojaDeMedias == null) {
+                hojaDeMedias = libro.createSheet("Medias");
+                Row encabezado = hojaDeMedias.createRow(0);
+                encabezado.createCell(0).setCellValue("Jugador");
+                encabezado.createCell(1).setCellValue("Promedio Tiros de 2");
+                encabezado.createCell(2).setCellValue("Promedio Tiros de 3");
+                encabezado.createCell(3).setCellValue("Promedio Tiros Libres");
+                encabezado.createCell(4).setCellValue("Promedio Puntos");
+            }
+
+            int filaMedia = -1;
+            for (int i = 1; i <= hojaDeMedias.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaDeMedias.getRow(i);
+                if (row != null && row.getCell(0).getStringCellValue().equals(nombreJugador)) {
+                    filaMedia = i;
+                    break;
                 }
             }
+
+            if (filaMedia == -1) {
+                filaMedia = hojaDeMedias.getPhysicalNumberOfRows();
+                Row filaNueva = hojaDeMedias.createRow(filaMedia);
+                filaNueva.createCell(0).setCellValue(nombreJugador);
+            } else {
+                Row filaExistente = hojaDeMedias.getRow(filaMedia);
+                filaExistente.createCell(0).setCellValue(nombreJugador);
+            }
+
+            Row filaMedi = hojaDeMedias.getRow(filaMedia);
+            filaMedi.createCell(1).setCellValue(tiros2 / (double) tiros2Realizados);
+            filaMedi.createCell(2).setCellValue(tiros3 / (double) tiros3Realizados);
+            filaMedi.createCell(3).setCellValue(tirosLibres / (double) tirosLibresRealizados);
+            filaMedi.createCell(4).setCellValue((2 * tiros2 + 3 * tiros3 + tirosLibres) / 2.0);
             
+            libro.setSheetOrder("Medias", libro.getNumberOfSheets() - 1);
+
             for (int i = 0; i < 12; i++) {
                 hoja.autoSizeColumn(i);
+            }
+            for (int i = 0; i < 6; i++) {
+                hojaDeMedias.autoSizeColumn(i);
             }
 
             try (FileOutputStream fileOut = new FileOutputStream(archivoExcel)) {
@@ -164,8 +202,10 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         }
     }
 
-    public static void calcularYExportar(JTextField NombreJugador, JSpinner Tiros2, JSpinner Tiros2Realizados, JSpinner Tiros3, JSpinner Tiros3Realizados, JSpinner TirosLibres, JSpinner TirosLibresRealizados, JSpinner TirosTotales, JSpinner Rebotes, JSpinner Asistencias, JSpinner Robos, JSpinner Tapones, JSpinner TaponesRecibidos, JSpinner Perdidas, JSpinner FaltasRecibidas, JSpinner FaltasRealizadas) {
-        String nombreJugador = NombreJugador.getText();
+
+    public static void calcularYExportar(JComboBox ElegirEquipo, JComboBox ElegirJugador, JSpinner Tiros2, JSpinner Tiros2Realizados, JSpinner Tiros3, JSpinner Tiros3Realizados, JSpinner TirosLibres, JSpinner TirosLibresRealizados, JSpinner TirosTotales, JSpinner Rebotes, JSpinner Asistencias, JSpinner Robos, JSpinner Tapones, JSpinner TaponesRecibidos, JSpinner Perdidas, JSpinner FaltasRecibidas, JSpinner FaltasRealizadas) {
+        String nombreJugador = (String) ElegirJugador.getSelectedItem();
+        String nombreEquipo = (String) ElegirEquipo.getSelectedItem();
         int tiros2 = (int) Tiros2.getValue();
         int tiros2Realizados = (int) Tiros2Realizados.getValue();
         int tiros3 = (int) Tiros3.getValue();
@@ -187,7 +227,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
             return;
         }
 
-        escribirEnExcel(nombreJugador, tiros2, tiros2Realizados, tiros3, tiros3Realizados, tirosLibres, tirosLibresRealizados, tirosTotales, rebotes, asistencias, robos, tapones, taponesRecibidos, perdidas, faltasRecibidas, faltasRealizadas);
+        escribirEnExcel(nombreEquipo, nombreJugador, tiros2, tiros2Realizados, tiros3, tiros3Realizados, tirosLibres, tirosLibresRealizados, tirosTotales, rebotes, asistencias, robos, tapones, taponesRecibidos, perdidas, faltasRecibidas, faltasRealizadas);
     }
 
     /**
@@ -202,7 +242,10 @@ public class BaloncestoNBA extends javax.swing.JFrame {
 
         Paneles = new javax.swing.JTabbedPane();
         Datos1 = new javax.swing.JPanel();
-        NombreJugadorTexto = new javax.swing.JLabel();
+        Jugador = new javax.swing.JLabel();
+        ElegirJugador = new javax.swing.JComboBox<>();
+        Equipo = new javax.swing.JLabel();
+        ElegirEquipo = new javax.swing.JComboBox<>();
         Tiros2Texto = new javax.swing.JLabel();
         Tiros2Texto2 = new javax.swing.JLabel();
         Tiros3Texto = new javax.swing.JLabel();
@@ -210,7 +253,6 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         TirosLibresTexto = new javax.swing.JLabel();
         TirosLibresTexto2 = new javax.swing.JLabel();
         TirosTotalesTexto = new javax.swing.JLabel();
-        NombreJugador = new javax.swing.JTextField();
         Tiros2 = new javax.swing.JSpinner();
         Tiros2Realizados = new javax.swing.JSpinner();
         Tiros3 = new javax.swing.JSpinner();
@@ -242,18 +284,40 @@ public class BaloncestoNBA extends javax.swing.JFrame {
 
         Datos1.setLayout(new java.awt.GridBagLayout());
 
-        NombreJugadorTexto.setText("Nombre de Jugador");
+        Jugador.setText("Jugador");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
+        Datos1.add(Jugador, gridBagConstraints);
+
+        ElegirJugador.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " " }));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        Datos1.add(NombreJugadorTexto, gridBagConstraints);
+        Datos1.add(ElegirJugador, gridBagConstraints);
+
+        Equipo.setText("Equipo");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        Datos1.add(Equipo, gridBagConstraints);
+
+        ElegirEquipo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " " }));
+        ElegirEquipo.setMinimumSize(new java.awt.Dimension(140, 26));
+        ElegirEquipo.setPreferredSize(new java.awt.Dimension(140, 26));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        Datos1.add(ElegirEquipo, gridBagConstraints);
 
         Tiros2Texto.setText("Tiros metidos de 2");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos1.add(Tiros2Texto, gridBagConstraints);
@@ -261,14 +325,14 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         Tiros2Texto2.setText("Tiros de 2 realizados");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridy = 4;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(Tiros2Texto2, gridBagConstraints);
 
         Tiros3Texto.setText("Tiros metidos de 3");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos1.add(Tiros3Texto, gridBagConstraints);
@@ -276,78 +340,70 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         Tiros3Texto3.setText("Tiros de 3 realizados");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridy = 6;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(Tiros3Texto3, gridBagConstraints);
 
         TirosLibresTexto.setText("Tiros libres metidos");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridy = 7;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(TirosLibresTexto, gridBagConstraints);
 
         TirosLibresTexto2.setText("Tiros libres realizados");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 7;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(TirosLibresTexto2, gridBagConstraints);
 
         TirosTotalesTexto.setText("Tiros totales");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 8;
+        gridBagConstraints.gridy = 9;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos1.add(TirosTotalesTexto, gridBagConstraints);
-
-        NombreJugador.setPreferredSize(new java.awt.Dimension(69, 26));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 3;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(NombreJugador, gridBagConstraints);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 3;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(Tiros2, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 3;
         gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(Tiros2Realizados, gridBagConstraints);
+        Datos1.add(Tiros2, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 4;
         gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(Tiros3, gridBagConstraints);
+        Datos1.add(Tiros2Realizados, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 5;
         gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(Tiros3Realizados, gridBagConstraints);
+        Datos1.add(Tiros3, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 6;
         gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(TirosLibres, gridBagConstraints);
+        Datos1.add(Tiros3Realizados, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 7;
         gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(TirosLibresRealizados, gridBagConstraints);
+        Datos1.add(TirosLibres, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 8;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        Datos1.add(TirosLibresRealizados, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 9;
         gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(TirosTotales, gridBagConstraints);
@@ -471,7 +527,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         Paneles.addTab("Datos", Datos2);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.ipadx = 60;
@@ -526,12 +582,14 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     private javax.swing.JButton Calcular;
     private javax.swing.JPanel Datos1;
     private javax.swing.JPanel Datos2;
+    private javax.swing.JComboBox<String> ElegirEquipo;
+    private javax.swing.JComboBox<String> ElegirJugador;
+    private javax.swing.JLabel Equipo;
     private javax.swing.JSpinner FaltasRealizadas;
     private javax.swing.JLabel FaltasRealizadasTexto;
     private javax.swing.JSpinner FaltasRecibidas;
     private javax.swing.JLabel FaltasRecibidasTexto;
-    private javax.swing.JTextField NombreJugador;
-    private javax.swing.JLabel NombreJugadorTexto;
+    private javax.swing.JLabel Jugador;
     private javax.swing.JTabbedPane Paneles;
     private javax.swing.JSpinner Perdidas;
     private javax.swing.JLabel PerdidasTexto;
