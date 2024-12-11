@@ -16,6 +16,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 
 /**
  *
@@ -63,16 +64,16 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     public static void crearGrafico(JComboBox jugadorSeleccionado, JComboBox archivoEquipo) {
         String nombreJugador = (String) jugadorSeleccionado.getSelectedItem();
         String nombreEquipo = (String) archivoEquipo.getSelectedItem();
-        File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx");
         String PATH_GRAFICOS = "C:\\Users\\GS2\\Desktop\\Graficos";
 
-        if (nombreJugador == null || nombreJugador.isEmpty() || nombreJugador == " ") {
+        if (nombreJugador == null || nombreJugador.isEmpty() || nombreJugador.equals(" ")) {
             JOptionPane.showMessageDialog(null, "Seleccione un jugador para generar el gráfico.");
             return;
         }
 
+        File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx");
+
         try {
-            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
             Workbook libro = new XSSFWorkbook(archivoExcel);
             Sheet hojaJugador = libro.getSheet(nombreJugador);
 
@@ -82,49 +83,98 @@ public class BaloncestoNBA extends javax.swing.JFrame {
                 return;
             }
 
+            DefaultCategoryDataset datasetPuntos = new DefaultCategoryDataset();
+            DefaultCategoryDataset datasetRebotes = new DefaultCategoryDataset();
+            double totalPuntos = 0;
+            int partidos = 0;
+
             for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
                 Row row = hojaJugador.getRow(i);
                 if (row != null) {
                     double puntos = (2 * row.getCell(0).getNumericCellValue())
                             + (3 * row.getCell(2).getNumericCellValue())
                             + row.getCell(4).getNumericCellValue();
-                    dataset.addValue(puntos, "Puntos", "Partido " + i);
+                    double rebotes = row.getCell(6).getNumericCellValue();
+
+                    datasetPuntos.addValue(puntos, "Puntos", "Partido " + i);
+                    datasetRebotes.addValue(rebotes, "Rebotes", "Partido " + i);
+
+                    totalPuntos += puntos;
+                    partidos++;
                 }
             }
-            libro.close();
 
-            JFreeChart chart = ChartFactory.createBarChart(
-                    "Puntos de " + nombreJugador,
-                    "Partidos",
-                    "Puntos",
-                    dataset
-            );
+            double mediaPuntos = partidos > 0 ? totalPuntos / partidos : 0;
 
-            CategoryPlot plot = chart.getCategoryPlot();
-            plot.setRangeGridlinePaint(java.awt.Color.BLACK);
-
-            File directorio = new File(PATH_GRAFICOS);
-            if (!directorio.exists()) {
-                directorio.mkdirs();
+            DefaultCategoryDataset datasetMedia = new DefaultCategoryDataset();
+            for (int i = 1; i <= partidos; i++) {
+                datasetMedia.addValue(mediaPuntos, "Media Puntos", "Partido " + i);
             }
 
-            String rutaJugador = PATH_GRAFICOS + File.separator + nombreJugador + ".png";
-            ChartUtils.saveChartAsPNG(new File(rutaJugador), chart, 800, 600);
+            JFreeChart chartPuntos = ChartFactory.createBarChart(
+                    "Estadísticas de " + nombreJugador + " - Puntos y Media",
+                    "Partidos",
+                    "Puntos",
+                    datasetPuntos
+            );
 
-            JOptionPane.showMessageDialog(null, "Gráfico generado en: " + rutaJugador);
+            CategoryPlot plotPuntos = chartPuntos.getCategoryPlot();
+            plotPuntos.setDataset(1, datasetMedia);
+            LineAndShapeRenderer rendererMedia = new LineAndShapeRenderer();
+            rendererMedia.setSeriesPaint(0, java.awt.Color.BLUE);
+            plotPuntos.setRenderer(1, rendererMedia);
 
-            JFrame frameGrafico = new JFrame("Gráfico de " + nombreJugador);
-            frameGrafico.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            frameGrafico.setSize(800, 600);
+            JFreeChart chartRebotes = ChartFactory.createLineChart(
+                    "Estadísticas de " + nombreJugador + " - Rebotes",
+                    "Partidos",
+                    "Rebotes",
+                    datasetRebotes
+            );
 
-            ChartPanel chartPanel = new ChartPanel(chart);
-            frameGrafico.add(chartPanel);
-            frameGrafico.setVisible(true);
+            File carpetaPrincipal = new File(PATH_GRAFICOS);
+            if (!carpetaPrincipal.exists()) {
+                carpetaPrincipal.mkdirs();
+            }
+            File carpetaJugador = new File(carpetaPrincipal, nombreJugador);
+            if (!carpetaJugador.exists()) {
+                carpetaJugador.mkdirs();
+            }
 
+            String rutaGraficoPuntos = carpetaJugador + File.separator + "Grafico_Puntos_Media.png";
+            ChartUtils.saveChartAsPNG(new File(rutaGraficoPuntos), chartPuntos, 800, 600);
+
+            String rutaGraficoRebotes = carpetaJugador + File.separator + "Grafico_Rebotes.png";
+            ChartUtils.saveChartAsPNG(new File(rutaGraficoRebotes), chartRebotes, 800, 600);
+
+            JOptionPane.showMessageDialog(null, "Gráficas generadas en:\n" 
+                + "- " + rutaGraficoPuntos + "\n" 
+                + "- " + rutaGraficoRebotes);
+
+            JFrame framePuntos = new JFrame("Gráfico de Puntos y Media - " + nombreJugador);
+            framePuntos.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            framePuntos.setSize(800, 600);
+            ChartPanel panelPuntos = new ChartPanel(chartPuntos);
+            framePuntos.add(panelPuntos);
+            framePuntos.setVisible(true);
+
+            JFrame frameRebotes = new JFrame("Gráfico de Rebotes - " + nombreJugador);
+            frameRebotes.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frameRebotes.setSize(800, 600);
+            ChartPanel panelRebotes = new ChartPanel(chartRebotes);
+            frameRebotes.add(panelRebotes);
+            frameRebotes.setVisible(true);
+
+            libro.close();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Error al generar gráfico: " + ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al generar gráficos: " + ex.getMessage());
         }
     }
+
+
+
+
+
+
 
     
     public static void actualizarjugadores(JComboBox Elegiquipo, JComboBox Elegijuga, String[] boston, String[] chicago){
