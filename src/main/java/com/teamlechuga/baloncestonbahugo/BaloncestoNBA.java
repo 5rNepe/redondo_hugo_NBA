@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package com.teamlechuga.baloncestonbahugo;
+import com.itextpdf.io.image.ImageData;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,6 +18,21 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.layout.element.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Element;
 
 /**
  *
@@ -59,6 +75,10 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         Calcular.addActionListener(e -> {
             calcularYExportar(ElegirEquipo, ElegirJugador, Tiros2, Tiros2Realizados, Tiros3, Tiros3Realizados, TirosLibres, TirosLibresRealizados, TirosTotales, Rebotes, Asistencias, Robos, Tapones, TaponesRecibidos, Perdidas, FaltasRecibidas, FaltasRealizadas);
         });
+        
+        PDF.addActionListener(e -> {
+            generarPDF(ElegirEquipo, ElegirJugador);
+        });
     }
     
     public static void crearGrafico(JComboBox jugadorSeleccionado, JComboBox archivoEquipo) {
@@ -94,7 +114,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
                     double puntos = (2 * row.getCell(0).getNumericCellValue())
                             + (3 * row.getCell(2).getNumericCellValue())
                             + row.getCell(4).getNumericCellValue();
-                    double rebotes = row.getCell(6).getNumericCellValue();
+                    double rebotes = row.getCell(11).getNumericCellValue();
 
                     datasetPuntos.addValue(puntos, "Puntos", "Partido " + i);
                     datasetRebotes.addValue(rebotes, "Rebotes", "Partido " + i);
@@ -169,13 +189,102 @@ public class BaloncestoNBA extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Error al generar gráficos: " + ex.getMessage());
         }
     }
+    
+    public static void generarPDF(JComboBox ElegirEquipo, JComboBox ElegirJugador) {
+        String nombreJugador = (String) ElegirJugador.getSelectedItem();
+        String nombreEquipo = (String) ElegirEquipo.getSelectedItem();
 
+        // Verifica si se seleccionaron los elementos correctamente
+        if (nombreJugador == null || nombreJugador.isEmpty() || nombreEquipo == null || nombreEquipo.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Seleccione un jugador y un equipo.");
+            return;
+        }
 
+        // Define el path de los gráficos generados previamente
+        String PATH_GRAFICOS = "C:\\Users\\GS2\\Desktop\\Graficos\\" + nombreJugador;
+        String rutaGraficoPuntos = PATH_GRAFICOS + "\\Grafico_Puntos_Media.png";
+        String rutaGraficoRebotes = PATH_GRAFICOS + "\\Grafico_Rebotes.png";
+        String rutaGraficoAsistencias = PATH_GRAFICOS + "\\Grafico_Asistencias.png"; // Asumiendo que este gráfico también es generado.
 
+        // Datos de estadísticas
+        double fg = obtenerFg(nombreJugador, nombreEquipo);
+        double efg = obtenerEfg(nombreJugador, nombreEquipo);
+        double ts = obtenerTs(nombreJugador, nombreEquipo);
+        double triplesMetidosProm = obtenerPromedioTriples(nombreJugador, nombreEquipo);
 
+        try {
+            // Crear documento PDF
+            Document document = new Document();
+            String rutaPDF = "C:\\Users\\GS2\\Desktop\\Estadisticas_" + nombreJugador + ".pdf";
+            PdfWriter.getInstance(document, new FileOutputStream(rutaPDF));
+            document.open();
 
+            // Título con el nombre del jugador y el equipo
+            document.add(new Paragraph("Estadísticas de Baloncesto - " + nombreJugador + " (" + nombreEquipo + ")"));
 
+            // Añadir gráficos (Puntos, Rebotes, Asistencias)
+            document.add(new Paragraph("Gráfico de Puntos y Media:"));
+            Image puntosImage = Image.getInstance(rutaGraficoPuntos); // Usamos Image.getInstance
+            puntosImage.setWidthPercentage(75); // Ajusta el tamaño del gráfico
+            document.add(puntosImage);
 
+            document.add(new Paragraph("Gráfico de Rebotes:"));
+            Image rebotesImage = Image.getInstance(rutaGraficoRebotes);
+            rebotesImage.setWidthPercentage(75); // Ajusta el tamaño del gráfico
+            document.add(rebotesImage);
+
+            document.add(new Paragraph("Gráfico de Asistencias:"));
+            Image asistenciasImage = Image.getInstance(rutaGraficoAsistencias);
+            asistenciasImage.setWidthPercentage(75); // Ajusta el tamaño del gráfico
+            document.add(asistenciasImage);
+
+            // Otras estadísticas en dos columnas
+            document.add(new Paragraph("Otras Estadísticas:"));
+
+            // Crear tabla sin líneas utilizando PdfPTable
+            PdfPTable table = new PdfPTable(2); // Cambiado a PdfPTable
+            table.addCell(new PdfPCell(new Paragraph("Promedio Triples Metidos por Partido:"))); // Usamos PdfPCell
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f", triplesMetidosProm))));
+            table.addCell(new PdfPCell(new Paragraph("%FG:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f%%", fg))));
+            table.addCell(new PdfPCell(new Paragraph("%eFG:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f%%", efg))));
+            table.addCell(new PdfPCell(new Paragraph("%TS:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f%%", ts))));
+
+            // Añadir la tabla al documento
+            document.add(table);
+
+            // Cerrar el documento
+            document.close();
+
+            // Mensaje de éxito
+            JOptionPane.showMessageDialog(null, "PDF generado correctamente en: " + rutaPDF);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al generar el PDF: " + e.getMessage());
+        }
+    }
+
+    private static double obtenerFg(String nombreJugador, String nombreEquipo) {
+        // Implementa la lógica para obtener el %FG
+        return 50.0; // Valor ficticio
+    }
+
+    private static double obtenerEfg(String nombreJugador, String nombreEquipo) {
+        // Implementa la lógica para obtener el %eFG
+        return 55.0; // Valor ficticio
+    }
+
+    private static double obtenerTs(String nombreJugador, String nombreEquipo) {
+        // Implementa la lógica para obtener el %TS
+        return 60.0; // Valor ficticio
+    }
+
+    private static double obtenerPromedioTriples(String nombreJugador, String nombreEquipo) {
+        // Implementa la lógica para obtener el promedio de triples
+        return 2.5; // Valor ficticio
+    }
     
     public static void actualizarjugadores(JComboBox Elegiquipo, JComboBox Elegijuga, String[] boston, String[] chicago){
         String equipoSeleccionado = (String) Elegiquipo.getSelectedItem();
@@ -224,6 +333,8 @@ public class BaloncestoNBA extends javax.swing.JFrame {
                 headerRow.createCell(8).setCellValue("eFG% (Porcentaje efectivo)");
                 headerRow.createCell(9).setCellValue("TS% (Tiro Real)");
                 headerRow.createCell(10).setCellValue("Valoración");
+                headerRow.createCell(11).setCellValue("Rebotes");
+                headerRow.createCell(12).setCellValue("Asistencias");
             }
 
             int filaJugador = hoja.getPhysicalNumberOfRows();
@@ -251,6 +362,8 @@ public class BaloncestoNBA extends javax.swing.JFrame {
             Integer tirosFallados = (tiros3Realizados - tiros3) + (tiros2Realizados - tiros2) + (tirosLibresRealizados - tirosLibres);
             Integer valoracion = (puntos + rebotes + asistencias + robos + tapones + faltasRecibidas) - (tirosFallados + perdidas + taponesRecibidos + faltasRealizadas);
             dataRow.createCell(10).setCellValue(valoracion);
+            dataRow.createCell(11).setCellValue(rebotes);
+            dataRow.createCell(12).setCellValue(asistencias);
 
             Sheet hojaDeMedias = libro.getSheet("Medias");
             if (hojaDeMedias == null) {
@@ -428,6 +541,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         FaltasRealizadas = new javax.swing.JSpinner();
         Calcular = new javax.swing.JButton();
         Grafica = new javax.swing.JButton();
+        PDF = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -680,6 +794,17 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints.gridy = 9;
         Datos2.add(Grafica, gridBagConstraints);
 
+        PDF.setText("Crear PDF");
+        PDF.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                PDFActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 9;
+        Datos2.add(PDF, gridBagConstraints);
+
         Paneles.addTab("Datos", Datos2);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -696,6 +821,10 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     private void CalcularActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CalcularActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_CalcularActionPerformed
+
+    private void PDFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PDFActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_PDFActionPerformed
 
     /**
      * @param args the command line arguments
@@ -747,6 +876,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     private javax.swing.JLabel FaltasRecibidasTexto;
     private javax.swing.JButton Grafica;
     private javax.swing.JLabel Jugador;
+    private javax.swing.JButton PDF;
     private javax.swing.JTabbedPane Paneles;
     private javax.swing.JSpinner Perdidas;
     private javax.swing.JLabel PerdidasTexto;
