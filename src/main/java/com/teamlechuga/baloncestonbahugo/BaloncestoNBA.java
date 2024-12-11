@@ -190,6 +190,336 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         }
     }
     
+    public static void crearGraficoAsistencias(JComboBox jugadorSeleccionado, JComboBox archivoEquipo) {
+        String nombreJugador = (String) jugadorSeleccionado.getSelectedItem();
+        String nombreEquipo = (String) archivoEquipo.getSelectedItem();
+        String PATH_GRAFICOS = "C:\\Users\\GS2\\Desktop\\Graficos";
+
+        File archivoExcel = new File("C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx");
+
+        try {
+            Workbook libro = new XSSFWorkbook(archivoExcel);
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+
+            if (hojaJugador == null) {
+                JOptionPane.showMessageDialog(null, "No hay datos para el jugador seleccionado.");
+                libro.close();
+                return;
+            }
+
+            DefaultCategoryDataset datasetAsistencias = new DefaultCategoryDataset();
+            int partidos = 0;
+
+            for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaJugador.getRow(i);
+                if (row != null) {
+                    double asistencias = row.getCell(12).getNumericCellValue();
+
+                    datasetAsistencias.addValue(asistencias, "Asistencias", "Partido " + i);
+
+                    partidos++;
+                }
+            }
+
+            if (partidos == 0) {
+                JOptionPane.showMessageDialog(null, "No hay datos de asistencias para este jugador.");
+                libro.close();
+                return;
+            }
+
+            JFreeChart chartAsistencias = ChartFactory.createLineChart(
+                    "Estadísticas de " + nombreJugador + " - Asistencias",
+                    "Partidos",
+                    "Asistencias",
+                    datasetAsistencias
+            );
+
+            File carpetaPrincipal = new File(PATH_GRAFICOS);
+            if (!carpetaPrincipal.exists()) {
+                carpetaPrincipal.mkdirs();
+            }
+            File carpetaJugador = new File(carpetaPrincipal, nombreJugador);
+            if (!carpetaJugador.exists()) {
+                carpetaJugador.mkdirs();
+            }
+
+            String rutaGraficoAsistencias = carpetaJugador + File.separator + "Grafico_Asistencias.png";
+            ChartUtils.saveChartAsPNG(new File(rutaGraficoAsistencias), chartAsistencias, 800, 600);
+
+            libro.close();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Error al generar gráfico de asistencias: " + ex.getMessage());
+        }
+    }
+    
+    public static void generarPDF(JComboBox ElegirEquipo, JComboBox ElegirJugador) {
+        String nombreJugador = (String) ElegirJugador.getSelectedItem();
+        String nombreEquipo = (String) ElegirEquipo.getSelectedItem();
+
+        if (nombreJugador == null || nombreJugador.isEmpty() || nombreEquipo == null || nombreEquipo.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Seleccione un jugador y un equipo.");
+            return;
+        }
+
+        crearGraficoAsistencias(ElegirJugador, ElegirEquipo);
+
+        String PATH_GRAFICOS = "C:\\Users\\GS2\\Desktop\\Graficos\\" + nombreJugador;
+        String rutaGraficoPuntos = PATH_GRAFICOS + "\\Grafico_Puntos_Media.png";
+        String rutaGraficoRebotes = PATH_GRAFICOS + "\\Grafico_Rebotes.png";
+        String rutaGraficoAsistencias = PATH_GRAFICOS + "\\Grafico_Asistencias.png";
+
+        double fg = obtenerFg(nombreJugador, nombreEquipo);
+        double efg = obtenerEfg(nombreJugador, nombreEquipo);
+        double ts = obtenerTs(nombreJugador, nombreEquipo);
+        double triplesMetidosProm = obtenerPromedioTriples(nombreJugador, nombreEquipo);
+
+        try {
+            Document document = new Document();
+            String rutaPDF = "C:\\Users\\GS2\\Desktop\\Graficos\\" + nombreJugador + "\\Estadisticas_" + nombreJugador + ".pdf";
+            PdfWriter.getInstance(document, new FileOutputStream(rutaPDF));
+            document.open();
+
+            document.add(new Paragraph("Estadísticas de Baloncesto - " + nombreJugador + " (" + nombreEquipo + ")"));
+
+            Image puntosImage = Image.getInstance(rutaGraficoPuntos);
+            puntosImage.scaleToFit(250, 200);
+            puntosImage.setAlignment(Image.ALIGN_CENTER);
+            document.add(puntosImage);
+
+            Image rebotesImage = Image.getInstance(rutaGraficoRebotes);
+            rebotesImage.scaleToFit(250, 200);
+            rebotesImage.setAlignment(Image.ALIGN_CENTER);
+            document.add(rebotesImage);
+
+            Image asistenciasImage = Image.getInstance(rutaGraficoAsistencias);
+            asistenciasImage.scaleToFit(250, 200);
+            asistenciasImage.setAlignment(Image.ALIGN_CENTER);
+            document.add(asistenciasImage);
+
+            document.add(new Paragraph("\n"));
+
+            document.add(new Paragraph("Otras Estadísticas:"));
+            document.add(new Paragraph("\n"));
+
+            PdfPTable table = new PdfPTable(2);
+            table.addCell(new PdfPCell(new Paragraph("Promedio Triples Metidos por Partido:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f", triplesMetidosProm))));
+            table.addCell(new PdfPCell(new Paragraph("%FG:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f%%", fg))));
+            table.addCell(new PdfPCell(new Paragraph("%eFG:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f%%", efg))));
+            table.addCell(new PdfPCell(new Paragraph("%TS:")));
+            table.addCell(new PdfPCell(new Paragraph(String.format("%.2f%%", ts))));
+
+            document.add(table);
+
+            document.close();
+
+            JOptionPane.showMessageDialog(null, "PDF generado correctamente en: " + rutaPDF);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al generar el PDF: " + e.getMessage());
+        }
+    }
+
+    private static double obtenerFg(String nombreJugador, String nombreEquipo) {
+        String rutaExcel = "C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx";
+
+        try {
+            File archivoExcel = new File(rutaExcel);
+            Workbook libro = new XSSFWorkbook(archivoExcel);
+
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+
+            if (hojaJugador == null) {
+                JOptionPane.showMessageDialog(null, "No se encontraron datos para el jugador seleccionado.");
+                libro.close();
+                return 0.0;
+            }
+
+            int totalTiros2 = 0;
+            int totalTiros3 = 0;
+            int totaltiros2ence = 0;
+            int totaltiros3ence = 0;
+
+            for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaJugador.getRow(i);
+                if (row != null) {
+                    int tiros2 = (int) row.getCell(0).getNumericCellValue();
+                    int tiros2Realizados = (int) row.getCell(1).getNumericCellValue();
+                    int tiros3 = (int) row.getCell(2).getNumericCellValue();
+                    int tiros3Realizados = (int) row.getCell(3).getNumericCellValue();
+
+                    totalTiros2 += tiros2Realizados;
+                    totaltiros2ence += tiros2;
+                    totalTiros3 += tiros3Realizados;
+                    totaltiros3ence += tiros3;
+                }
+            }
+
+            libro.close();
+
+            int fga = totalTiros2 + totalTiros3;
+            double fg = (fga > 0) ? ((double) (totaltiros2ence + totaltiros3ence) / fga) * 100 : 0;
+            System.out.println(fg);
+
+            return fg;
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener el FG: " + e.getMessage());
+            return 0.0;
+        }
+    }
+
+    private static double obtenerEfg(String nombreJugador, String nombreEquipo) {
+        String rutaExcel = "C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx";
+
+        try {
+            File archivoExcel = new File(rutaExcel);
+            Workbook libro = new XSSFWorkbook(archivoExcel);
+
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+
+            if (hojaJugador == null) {
+                JOptionPane.showMessageDialog(null, "No se encontraron datos para el jugador seleccionado.");
+                libro.close();
+                return 0.0;
+            }
+
+            int totalTiros2 = 0;
+            int totalTiros3 = 0;
+            int totaltiros2ence = 0;
+            int totaltiros3ence = 0;
+
+            for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaJugador.getRow(i);
+                if (row != null) {
+                    int tiros2 = (int) row.getCell(0).getNumericCellValue();
+                    int tiros2Realizados = (int) row.getCell(1).getNumericCellValue();
+                    int tiros3 = (int) row.getCell(2).getNumericCellValue();
+                    int tiros3Realizados = (int) row.getCell(3).getNumericCellValue();
+
+                    totalTiros2 += tiros2Realizados;
+                    totaltiros2ence += tiros2;
+                    totalTiros3 += tiros3Realizados;
+                    totaltiros3ence += tiros3;
+                }
+            }
+
+            libro.close();
+
+            int fga = totalTiros2 + totalTiros3;
+            double efg = (fga > 0) ? ((double) (totaltiros2ence + (0.5 * totaltiros3ence)) / fga) * 100 : 0;
+
+            return efg;
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener el EFG: " + e.getMessage());
+            return 0.0;
+        }
+    }
+
+    private static double obtenerTs(String nombreJugador, String nombreEquipo) {
+        String rutaExcel = "C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx";
+
+        try {
+            File archivoExcel = new File(rutaExcel);
+            Workbook libro = new XSSFWorkbook(archivoExcel);
+
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+
+            if (hojaJugador == null) {
+                JOptionPane.showMessageDialog(null, "No se encontraron datos para el jugador seleccionado.");
+                libro.close();
+                return 0.0;
+            }
+
+            int totalTiros2 = 0;
+            int totalTiros3 = 0;
+            int totalTirosLibres = 0;
+            int totalPuntos = 0;
+            int totalTirosTotales = 0;
+            int totaltiros2ence = 0;
+            int totaltiros3ence = 0;
+            int totalTirosEnce = 0;
+            
+
+            for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaJugador.getRow(i);
+                if (row != null) {
+                    int tiros2 = (int) row.getCell(0).getNumericCellValue();
+                    int tiros2Realizados = (int) row.getCell(1).getNumericCellValue();
+                    int tiros3 = (int) row.getCell(2).getNumericCellValue();
+                    int tiros3Realizados = (int) row.getCell(3).getNumericCellValue();
+                    int tirosLibresEncestados = (int) row.getCell(4).getNumericCellValue();
+                    int tirosLibres = (int) row.getCell(5).getNumericCellValue();
+                    int tirosTotales = (int) row.getCell(6).getNumericCellValue();
+                    
+                    totalTiros2 += tiros2Realizados;
+                    totalTiros3 += tiros3Realizados;
+                    totalTirosEnce += tirosLibresEncestados;
+                    totalTirosLibres += tirosLibres;
+                    totalTirosTotales += tirosTotales;
+                    totaltiros2ence += tiros2;
+                    totaltiros3ence += tiros3;
+                    
+                    totalPuntos += (2 * tiros2) + (3 * tiros3) + tirosLibresEncestados;
+                }
+            }
+
+            libro.close();
+
+            int fga = totalTiros2 + totalTiros3;
+            double ts = (fga > 0) ? ((double) totalPuntos / (2 * (fga + (0.44 * totalTirosLibres)))) * 100 : 0;
+
+            return ts;
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener el TS: " + e.getMessage());
+            return 0.0;
+        }
+    }
+
+    private static double obtenerPromedioTriples(String nombreJugador, String nombreEquipo) {
+        String rutaExcel = "C:\\Users\\GS2\\Desktop\\" + nombreEquipo + " Estadisticas Baloncesto.xlsx";
+
+        try {
+            File archivoExcel = new File(rutaExcel);
+            Workbook libro = new XSSFWorkbook(archivoExcel);
+
+            Sheet hojaJugador = libro.getSheet(nombreJugador);
+
+            if (hojaJugador == null) {
+                JOptionPane.showMessageDialog(null, "No se encontraron datos para el jugador seleccionado.");
+                libro.close();
+                return 0.0;
+            }
+
+            int totalTriplesRealizados = 0;
+            int totalPartidos = 0;
+
+            for (int i = 1; i < hojaJugador.getPhysicalNumberOfRows(); i++) {
+                Row row = hojaJugador.getRow(i);
+                if (row != null) {
+                    int triplesRealizados = (int) row.getCell(2).getNumericCellValue();
+
+                    totalTriplesRealizados += triplesRealizados;
+                    totalPartidos++;
+                }
+            }
+
+            libro.close();
+
+            double promedioTriples = (totalPartidos > 0) ? (double) totalTriplesRealizados / totalPartidos : 0;
+
+            return promedioTriples;
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener el promedio de triples: " + e.getMessage());
+            return 0.0;
+        }
+    }
+    
     public static void actualizarjugadores(JComboBox Elegiquipo, JComboBox Elegijuga, String[] boston, String[] chicago){
         String equipoSeleccionado = (String) Elegiquipo.getSelectedItem();
 
