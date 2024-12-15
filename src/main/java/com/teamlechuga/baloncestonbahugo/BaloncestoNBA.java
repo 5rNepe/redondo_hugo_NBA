@@ -33,6 +33,8 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.Element;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 
 /**
  *
@@ -79,8 +81,90 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         PDF.addActionListener(e -> {
             generarPDF(ElegirEquipo, ElegirJugador);
         });
+        menuTamanoo();
+        condiciones.addActionListener(e -> {
+            frameCondiciones ventanaCondiciones = new frameCondiciones();
+            ventanaCondiciones.setVisible(true);
+        });
+        tirosmaximos.addActionListener(e -> {
+            Object tiros1o = TirosLibresRealizados.getValue();
+            int tiros1 = (Integer) tiros1o;
+            Object tiros2o = Tiros2Realizados.getValue();
+            int tiros2 = (Integer) tiros2o;
+            Object tiros3o = Tiros3Realizados.getValue();
+            int tiros3 = (Integer) tiros3o;
+            int tirosIntentados = tiros1 + tiros2 + tiros3;
+            Object tirostot = TirosTotales.getValue();
+            int tirosRealizados = (Integer) tirostot;
+            if (tirosRealizados > tirosIntentados) {
+            FrameAvisoTiros frameAviso = new FrameAvisoTiros();
+            frameAviso.setVisible(true);
+        }
+        });
     }
     
+    public void menuTamanoo() {
+        pequeño.addActionListener(e -> {
+            Equipo.ajustarTamano(1);
+            Jugador.ajustarTamano(1);
+            Tiros2Texto.ajustarTamano(1);
+            Tiros2Texto2.ajustarTamano(1);
+            Tiros3Texto.ajustarTamano(1);
+            Tiros3Texto2.ajustarTamano(1);
+            TirosLibresTexto.ajustarTamano(1);
+            TirosLibresTexto2.ajustarTamano(1);
+            TirosTotalesTexto.ajustarTamano(1);
+            RebotesTexto.ajustarTamano(1);
+            AsistenciasTexto.ajustarTamano(1);
+            RobosTexto.ajustarTamano(1);
+            TaponesTexto.ajustarTamano(1);
+            TaponesRecibidosTexto.ajustarTamano(1);
+            PerdidasTexto.ajustarTamano(1);
+            FaltasRecibidasTexto.ajustarTamano(1);
+            FaltasRealizadasTexto.ajustarTamano(1);
+        });
+
+        mediano.addActionListener(e -> {
+            Equipo.ajustarTamano(2);
+            Jugador.ajustarTamano(2);
+            Tiros2Texto.ajustarTamano(2);
+            Tiros2Texto2.ajustarTamano(2);
+            Tiros3Texto.ajustarTamano(2);
+            Tiros3Texto2.ajustarTamano(2);
+            TirosLibresTexto.ajustarTamano(2);
+            TirosLibresTexto2.ajustarTamano(2);
+            TirosTotalesTexto.ajustarTamano(2);
+            RebotesTexto.ajustarTamano(2);
+            AsistenciasTexto.ajustarTamano(2);
+            RobosTexto.ajustarTamano(2);
+            TaponesTexto.ajustarTamano(2);
+            TaponesRecibidosTexto.ajustarTamano(2);
+            PerdidasTexto.ajustarTamano(2);
+            FaltasRecibidasTexto.ajustarTamano(2);
+            FaltasRealizadasTexto.ajustarTamano(2);
+        });
+
+        grande.addActionListener(e -> {
+            Equipo.ajustarTamano(3);
+            Jugador.ajustarTamano(3);
+            Tiros2Texto.ajustarTamano(3);
+            Tiros2Texto2.ajustarTamano(3);
+            Tiros3Texto.ajustarTamano(3);
+            Tiros3Texto2.ajustarTamano(3);
+            TirosLibresTexto.ajustarTamano(3);
+            TirosLibresTexto2.ajustarTamano(3);
+            TirosTotalesTexto.ajustarTamano(3);
+            RebotesTexto.ajustarTamano(3);
+            AsistenciasTexto.ajustarTamano(3);
+            RobosTexto.ajustarTamano(3);
+            TaponesTexto.ajustarTamano(3);
+            TaponesRecibidosTexto.ajustarTamano(3);
+            PerdidasTexto.ajustarTamano(3);
+            FaltasRecibidasTexto.ajustarTamano(3);
+            FaltasRealizadasTexto.ajustarTamano(3);
+        });
+    }
+  
     public static void crearGrafico(JComboBox jugadorSeleccionado, JComboBox archivoEquipo) {
         String nombreJugador = (String) jugadorSeleccionado.getSelectedItem();
         String nombreEquipo = (String) archivoEquipo.getSelectedItem();
@@ -736,19 +820,20 @@ public class BaloncestoNBA extends javax.swing.JFrame {
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
         Paneles = new javax.swing.JTabbedPane();
         Datos1 = new javax.swing.JPanel();
-        Jugador = new javax.swing.JLabel();
+        Jugador = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
         ElegirJugador = new javax.swing.JComboBox<>();
-        Equipo = new javax.swing.JLabel();
+        Equipo = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
         ElegirEquipo = new javax.swing.JComboBox<>();
-        Tiros2Texto = new javax.swing.JLabel();
-        Tiros2Texto2 = new javax.swing.JLabel();
-        Tiros3Texto = new javax.swing.JLabel();
-        Tiros3Texto3 = new javax.swing.JLabel();
-        TirosLibresTexto = new javax.swing.JLabel();
-        TirosLibresTexto2 = new javax.swing.JLabel();
-        TirosTotalesTexto = new javax.swing.JLabel();
+        Tiros2Texto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        Tiros2Texto2 = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        Tiros3Texto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        Tiros3Texto2 = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        TirosLibresTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        TirosLibresTexto2 = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        TirosTotalesTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
         Tiros2 = new javax.swing.JSpinner();
         Tiros2Realizados = new javax.swing.JSpinner();
         Tiros3 = new javax.swing.JSpinner();
@@ -757,14 +842,14 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         TirosLibresRealizados = new javax.swing.JSpinner();
         TirosTotales = new javax.swing.JSpinner();
         Datos2 = new javax.swing.JPanel();
-        RebotesTexto = new javax.swing.JLabel();
-        AsistenciasTexto = new javax.swing.JLabel();
-        RobosTexto = new javax.swing.JLabel();
-        TaponesTexto = new javax.swing.JLabel();
-        TaponesRecibidosTexto = new javax.swing.JLabel();
-        PerdidasTexto = new javax.swing.JLabel();
-        FaltasRecibidasTexto = new javax.swing.JLabel();
-        FaltasRealizadasTexto = new javax.swing.JLabel();
+        RebotesTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        AsistenciasTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        RobosTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        TaponesTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        TaponesRecibidosTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        PerdidasTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        FaltasRecibidasTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
+        FaltasRealizadasTexto = new com.teamlechuga.baloncestonbahugo.TextoPersonalizado();
         Rebotes = new javax.swing.JSpinner();
         Asistencias = new javax.swing.JSpinner();
         Robos = new javax.swing.JSpinner();
@@ -776,6 +861,14 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         Calcular = new javax.swing.JButton();
         Grafica = new javax.swing.JButton();
         PDF = new javax.swing.JButton();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        menuTamano = new javax.swing.JMenu();
+        pequeño = new javax.swing.JRadioButtonMenuItem();
+        mediano = new javax.swing.JRadioButtonMenuItem();
+        grande = new javax.swing.JRadioButtonMenuItem();
+        ayuda = new javax.swing.JMenu();
+        condiciones = new javax.swing.JMenuItem();
+        tirosmaximos = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -808,7 +901,7 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.gridwidth = 10;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(ElegirEquipo, gridBagConstraints);
 
@@ -816,53 +909,46 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 3;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos1.add(Tiros2Texto, gridBagConstraints);
 
         Tiros2Texto2.setText("Tiros de 2 realizados");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 4;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(Tiros2Texto2, gridBagConstraints);
 
         Tiros3Texto.setText("Tiros metidos de 3");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 5;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos1.add(Tiros3Texto, gridBagConstraints);
 
-        Tiros3Texto3.setText("Tiros de 3 realizados");
+        Tiros3Texto2.setText("Tiros de 3 realizados");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 6;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        Datos1.add(Tiros3Texto3, gridBagConstraints);
+        Datos1.add(Tiros3Texto2, gridBagConstraints);
 
         TirosLibresTexto.setText("Tiros libres metidos");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 7;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(TirosLibresTexto, gridBagConstraints);
 
         TirosLibresTexto2.setText("Tiros libres realizados");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 8;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         Datos1.add(TirosLibresTexto2, gridBagConstraints);
 
         TirosTotalesTexto.setText("Tiros totales");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 9;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos1.add(TirosTotalesTexto, gridBagConstraints);
+
+        Tiros2.setMinimumSize(new java.awt.Dimension(140, 26));
+        Tiros2.setPreferredSize(new java.awt.Dimension(140, 26));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 3;
@@ -914,14 +1000,12 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos2.add(RebotesTexto, gridBagConstraints);
 
         AsistenciasTexto.setText("Asistencias");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos2.add(AsistenciasTexto, gridBagConstraints);
 
         RobosTexto.setText("Robos");
@@ -934,7 +1018,6 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 4;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos2.add(TaponesTexto, gridBagConstraints);
 
         TaponesRecibidosTexto.setText("Tapones Recibidos");
@@ -959,8 +1042,6 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 8;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         Datos2.add(FaltasRealizadasTexto, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
@@ -1049,6 +1130,35 @@ public class BaloncestoNBA extends javax.swing.JFrame {
         gridBagConstraints.ipady = 10;
         getContentPane().add(Paneles, gridBagConstraints);
 
+        menuTamano.setText("Tamaño del Texto");
+
+        buttonGroup1.add(pequeño);
+        pequeño.setSelected(true);
+        pequeño.setText("Pequeño");
+        menuTamano.add(pequeño);
+
+        buttonGroup1.add(mediano);
+        mediano.setText("Mediano");
+        menuTamano.add(mediano);
+
+        buttonGroup1.add(grande);
+        grande.setText("Grande");
+        menuTamano.add(grande);
+
+        jMenuBar1.add(menuTamano);
+
+        ayuda.setText("Ayuda");
+
+        condiciones.setText("Condiciones De Servicio");
+        ayuda.add(condiciones);
+
+        tirosmaximos.setText("Comprobar Tiros");
+        ayuda.add(tirosmaximos);
+
+        jMenuBar1.add(ayuda);
+
+        setJMenuBar(jMenuBar1);
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1097,44 +1207,53 @@ public class BaloncestoNBA extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JSpinner Asistencias;
-    private javax.swing.JLabel AsistenciasTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado AsistenciasTexto;
     private javax.swing.JButton Calcular;
     private javax.swing.JPanel Datos1;
     private javax.swing.JPanel Datos2;
     private javax.swing.JComboBox<String> ElegirEquipo;
     private javax.swing.JComboBox<String> ElegirJugador;
-    private javax.swing.JLabel Equipo;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado Equipo;
     private javax.swing.JSpinner FaltasRealizadas;
-    private javax.swing.JLabel FaltasRealizadasTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado FaltasRealizadasTexto;
     private javax.swing.JSpinner FaltasRecibidas;
-    private javax.swing.JLabel FaltasRecibidasTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado FaltasRecibidasTexto;
     private javax.swing.JButton Grafica;
-    private javax.swing.JLabel Jugador;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado Jugador;
     private javax.swing.JButton PDF;
     private javax.swing.JTabbedPane Paneles;
     private javax.swing.JSpinner Perdidas;
-    private javax.swing.JLabel PerdidasTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado PerdidasTexto;
     private javax.swing.JSpinner Rebotes;
-    private javax.swing.JLabel RebotesTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado RebotesTexto;
     private javax.swing.JSpinner Robos;
-    private javax.swing.JLabel RobosTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado RobosTexto;
     private javax.swing.JSpinner Tapones;
     private javax.swing.JSpinner TaponesRecibidos;
-    private javax.swing.JLabel TaponesRecibidosTexto;
-    private javax.swing.JLabel TaponesTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado TaponesRecibidosTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado TaponesTexto;
     private javax.swing.JSpinner Tiros2;
     private javax.swing.JSpinner Tiros2Realizados;
-    private javax.swing.JLabel Tiros2Texto;
-    private javax.swing.JLabel Tiros2Texto2;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado Tiros2Texto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado Tiros2Texto2;
     private javax.swing.JSpinner Tiros3;
     private javax.swing.JSpinner Tiros3Realizados;
-    private javax.swing.JLabel Tiros3Texto;
-    private javax.swing.JLabel Tiros3Texto3;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado Tiros3Texto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado Tiros3Texto2;
     private javax.swing.JSpinner TirosLibres;
     private javax.swing.JSpinner TirosLibresRealizados;
-    private javax.swing.JLabel TirosLibresTexto;
-    private javax.swing.JLabel TirosLibresTexto2;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado TirosLibresTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado TirosLibresTexto2;
     private javax.swing.JSpinner TirosTotales;
-    private javax.swing.JLabel TirosTotalesTexto;
+    private com.teamlechuga.baloncestonbahugo.TextoPersonalizado TirosTotalesTexto;
+    private javax.swing.JMenu ayuda;
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JMenuItem condiciones;
+    private javax.swing.JRadioButtonMenuItem grande;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JRadioButtonMenuItem mediano;
+    private javax.swing.JMenu menuTamano;
+    private javax.swing.JRadioButtonMenuItem pequeño;
+    private javax.swing.JMenuItem tirosmaximos;
     // End of variables declaration//GEN-END:variables
 }
